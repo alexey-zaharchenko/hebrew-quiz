@@ -1,7 +1,7 @@
 const DEFAULT_CONFIG = {
-  sheetUrl: "PASTE_GOOGLE_SHEET_BROWSER_URL_WITH_ID_AND_GID_HERE",
+  sheetUrl: "https://docs.google.com/spreadsheets/d/1fCxoKggBgR4ueRTf6YEBM72_ENQe3h8j7UaccUIZVfg/edit?gid=0#gid=0",
   directionMode: "random",
-  showAnswersDelaySec: 2,
+  showAnswersDelaySec: 0,
   autoNextDelaySec: 0,
   candidateMin: 3,
   candidateMax: 5,
