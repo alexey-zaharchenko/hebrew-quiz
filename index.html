@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hebrew Ulpan Vocabulary Quiz</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div>
+          <h1>Hebrew Ulpan</h1>
+          <p id="poolSummary">Loading vocabulary...</p>
+        </div>
+        <button id="settingsButton" class="icon-button colorless-icon" type="button" aria-label="Stats and settings" style="color: grey; filter: grayscale(100%);">📈⚙️</button>
+      </header>
+
+      <main class="quiz-main" aria-live="polite">
+        <section id="statusPanel" class="status-panel">Loading vocabulary...</section>
+
+        <section id="quizPanel" class="quiz-panel" hidden>
+          <div class="action-row">
+            <button id="showAnswersButton" class="secondary-button countdown-control" type="button">Show answers</button>
+            <button id="nextButton" class="secondary-button hold-next-button" type="button">Next</button>
+          </div>
+
+          <article class="question-card">
+            <button id="questionInfoButton" class="info-button colorless-icon" type="button" aria-label="Info" style="color: grey; filter: grayscale(100%);">ℹ️</button>
+            <div id="questionContent" class="question-content card-text"></div>
+          </article>
+
+          <section id="candidateList" class="candidate-list" aria-label="Answer candidates"></section>
+        </section>
+      </main>
+    </div>
+
+    <div id="modalBackdrop" class="modal-backdrop" hidden>
+      <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <header class="modal-header">
+          <h2 id="modalTitle"></h2>
+          <button id="modalCloseButton" class="secondary-button" type="button">Close</button>
+        </header>
+        <div id="modalBody" class="modal-body"></div>
+      </section>
+    </div>
+
+    <script src="script.js" defer></script>
+  </body>
+</html>
