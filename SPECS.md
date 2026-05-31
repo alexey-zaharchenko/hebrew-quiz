@@ -1146,7 +1146,17 @@ Countdown border animation should move at constant linear speed around the eleme
 
 20. Main card and candidate card layout
 
-Question card and candidate cards should have fixed height.
+Question card and candidate cards should adjust to the viewport height.
+
+Question cards have no background panel and no border.
+
+Candidate cards keep their background panel and border.
+
+Candidate cards should share the available candidate-list height evenly.
+
+Avoid a candidate-list vertical scrollbar when the current viewport can fit all candidates while preserving comfortable tap targets.
+
+If all candidates cannot fit without making tap targets too small, candidate-list scrolling is allowed as a fallback.
 
 Use large text on cards.
 
@@ -1157,7 +1167,7 @@ When the Show answers button is disabled, its label is fully transparent.
 On iPhone-size screens:
 
 candidate cards are shown in one column
-candidate list can scroll if there are too many candidates to fit on screen
+candidate list scrolls only when there are too many candidates to fit on screen while preserving comfortable tap targets
 tap targets are large enough for one-handed mobile use
 
 Image candidates should fit inside the same card size as text candidates.
@@ -1576,6 +1586,7 @@ Rows with empty word or empty answer after cleanup are excluded silently.
 Rules:
 
 buttons should have visible text labels, not only icons
+button text should not be selectable
 tap targets should be comfortable on iPhone 13
 feedback should use both color and text labels
 content should remain usable with one hand
