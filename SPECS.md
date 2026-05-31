@@ -1266,6 +1266,14 @@ If selectedFonts is empty, select the first font.
 
 Apply the selected font to question and candidate card text for that card.
 
+When a font checkbox is checked, apply that font to the current visible question and answer candidates immediately.
+
+When a font checkbox is unchecked and the current card uses that font, randomly select and apply another font from the current selectedFonts set immediately.
+
+If selectedFonts becomes empty, apply the first font immediately.
+
+Future cards still randomly select one font from selectedFonts before each new card.
+
 The font list is:
 
 system-ui, shown as "system font"

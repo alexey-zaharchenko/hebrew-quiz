@@ -567,15 +567,53 @@ function chooseDirection() {
 }
 
 function chooseCardFont() {
+  const available = getSelectedFontOptions();
+  return available.length ? randomItem(available) : FONT_OPTIONS[0];
+}
+
+function getSelectedFontOptions() {
   const selected = state.config.selectedFonts || [];
-  const available = selected
+  return selected
     .map(function (fontKey) {
       return FONT_OPTIONS.find(function (font) {
         return font.key === fontKey;
       });
     })
     .filter(Boolean);
-  return available.length ? randomItem(available) : FONT_OPTIONS[0];
+}
+
+function applyCurrentCardFontChange(changedFont, checked) {
+  if (!state.currentCard) {
+    return;
+  }
+
+  const available = getSelectedFontOptions();
+  const currentFontStillSelected = available.some(function (font) {
+    return font.key === state.currentCard.font.key;
+  });
+  let nextFont = state.currentCard.font;
+
+  if (checked) {
+    nextFont = changedFont;
+  } else if (!currentFontStillSelected) {
+    nextFont = available.length ? randomItem(available) : FONT_OPTIONS[0];
+  }
+
+  if (nextFont.key === state.currentCard.font.key) {
+    return;
+  }
+
+  state.currentCard.font = nextFont;
+  state.currentFont = nextFont;
+  applyFontToVisibleCardText(nextFont);
+}
+
+function applyFontToVisibleCardText(font) {
+  applyFontToElement(els.questionContent, font);
+  document.querySelectorAll(".candidate-choice").forEach(function (element) {
+    applyFontToElement(element, font);
+  });
+  fitAllCardText();
 }
 
 // Weighted next-word selection uses attempt array order, never timestamps.
@@ -1214,6 +1252,7 @@ function appendFontsSection(wrapper) {
         next.delete(font.key);
       }
       state.config.selectedFonts = Array.from(next);
+      applyCurrentCardFontChange(font, checkbox.checked);
       saveConfig();
     });
 
