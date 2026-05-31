@@ -1158,9 +1158,11 @@ Avoid a candidate-list vertical scrollbar when the current viewport can fit all 
 
 If all candidates cannot fit without making tap targets too small, candidate-list scrolling is allowed as a fallback.
 
-Use large text on cards.
+Maximize text size on cards within the actual available text area.
 
-For text on question and candidate cards, scale font size down when needed so card text does not create an internal scrollbar.
+For text on question and candidate cards, choose the largest font size that fits without vertical or horizontal overflow.
+
+Refit card text after rendering, after web fonts load, and when the viewport size changes.
 
 When the Show answers button is disabled, its label is fully transparent.
 

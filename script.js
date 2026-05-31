@@ -65,6 +65,7 @@ window.addEventListener("unhandledrejection", function (event) {
     alertAndLog("Something went wrong. Please check the browser console for details.", event.reason);
   }
 });
+window.addEventListener("resize", fitAllCardText);
 
 async function init() {
   collectElements();
@@ -1018,18 +1019,48 @@ function fitTextToBox(element) {
     return;
   }
   const isQuestion = element.classList.contains("question-content");
-  const isHebrew = element.classList.contains("hebrew") || element.dir === "rtl";
-  const max = isQuestion ? (element.classList.contains("answer-text") ? 48 : 70) : (isHebrew ? 48 : 32);
-  const min = isQuestion ? 18 : 14;
-  element.style.fontSize = max + "px";
+  const box = getTextFitBox(element);
+  if (!box.width || !box.height) {
+    return;
+  }
 
-  for (let size = max; size >= min; size -= 1) {
+  let low = 1;
+  let high = getTextFitCeiling(element, box, isQuestion);
+  let best = low;
+  while (low <= high) {
+    const size = Math.floor((low + high) / 2);
     element.style.fontSize = size + "px";
-    if (element.scrollHeight <= element.clientHeight + 1 && element.scrollWidth <= element.clientWidth + 1) {
-      return;
+    if (textFitsBox(element, box)) {
+      best = size;
+      low = size + 1;
+    } else {
+      high = size - 1;
     }
   }
-  element.style.fontSize = min + "px";
+  element.style.fontSize = best + "px";
+}
+
+function getTextFitBox(element) {
+  const container = element.parentElement || element;
+  const style = window.getComputedStyle(container);
+  const width = container.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+  const height = container.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+  return {
+    width: Math.max(0, width),
+    height: Math.max(0, height)
+  };
+}
+
+function getTextFitCeiling(element, box, isQuestion) {
+  const isHebrew = element.classList.contains("hebrew") || element.dir === "rtl";
+  const legacyMax = isQuestion ? (element.classList.contains("answer-text") ? 48 : 70) : (isHebrew ? 48 : 32);
+  const heightMax = Math.ceil(box.height * 1.35);
+  const widthMax = Math.ceil(box.width * 0.7);
+  return Math.max(legacyMax, heightMax, widthMax, 1);
+}
+
+function textFitsBox(element, box) {
+  return element.scrollHeight <= box.height + 1 && element.scrollWidth <= box.width + 1;
 }
 
 function revealAnswers(cardId) {
