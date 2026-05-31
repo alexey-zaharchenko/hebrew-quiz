@@ -1146,7 +1146,13 @@ Countdown border animation should move at constant linear speed around the eleme
 
 20. Main card and candidate card layout
 
-Question card and candidate cards should adjust to the viewport height.
+The app uses a mobile-first full-screen layout with a fixed-height header.
+
+The page must not create a vertical scrollbar.
+
+The app shell must use modern mobile viewport units and respect the iOS Safari bottom safe area.
+
+Question card and candidate cards should adjust to the available height below the header.
 
 Question cards have no background panel and no border.
 
@@ -1154,22 +1160,24 @@ Candidate cards keep their background panel and border.
 
 Candidate cards should share the available candidate-list height evenly.
 
-Avoid a candidate-list vertical scrollbar when the current viewport can fit all candidates while preserving comfortable tap targets.
+Candidate cards may be shown in one or two columns depending on available width and candidate count.
 
-If all candidates cannot fit without making tap targets too small, candidate-list scrolling is allowed as a fallback.
+Do not make the page, quiz panel, or candidate list vertically scrollable.
 
-Maximize text size on cards within the actual available text area.
+Use container query units so card text size depends on the card size.
 
-For text on question and candidate cards, choose the largest font size that fits without vertical or horizontal overflow.
+Text should be large and readable, but exact maximum fitting is not required.
 
-Refit card text after rendering, after web fonts load, and when the viewport size changes.
+Words must never be split in the middle. Phrases may wrap between words. If a too-long single word cannot fit, clipping is acceptable.
+
+Do not use JavaScript-based text measuring or font-size fitting.
 
 When the Show answers button is disabled, its label is fully transparent.
 
 On iPhone-size screens:
 
-candidate cards are shown in one column
-candidate list scrolls only when there are too many candidates to fit on screen while preserving comfortable tap targets
+candidate cards may use one or two columns depending on available width
+candidate list does not scroll
 tap targets are large enough for one-handed mobile use
 
 Image candidates should fit inside the same card size as text candidates.
