@@ -86,6 +86,7 @@ async function init() {
 }
 
 function collectElements() {
+  els.appTitle = document.getElementById("appTitle");
   els.poolSummary = document.getElementById("poolSummary");
   els.settingsButton = document.getElementById("settingsButton");
   els.statusPanel = document.getElementById("statusPanel");
@@ -102,6 +103,7 @@ function collectElements() {
 }
 
 function bindStaticEvents() {
+  selectAppTitle();
   els.settingsButton.addEventListener("click", openSettingsModal);
   els.questionInfoButton.addEventListener("click", function () {
     if (state.currentCard) {
@@ -141,6 +143,27 @@ function bindStaticEvents() {
     if (event.key === "Escape" && !els.modalBackdrop.hidden) {
       closeModal();
     }
+  });
+}
+
+function selectAppTitle() {
+  const options = Array.from(els.appTitle.querySelectorAll(".title-option"));
+  const defaultOption = options.find(function (option) {
+    return option.hasAttribute("data-title-default");
+  });
+  let roll = Math.random() * 100;
+  let selected = defaultOption || options[0];
+
+  options.forEach(function (option) {
+    const weight = Number(option.getAttribute("data-title-weight") || 0);
+    if (weight > 0 && roll >= 0 && roll < weight) {
+      selected = option;
+    }
+    roll -= weight;
+  });
+
+  options.forEach(function (option) {
+    option.hidden = option !== selected;
   });
 }
 
@@ -436,6 +459,7 @@ function appendAttempt(attempt) {
     }
     alert("Could not save attempt history. Please check the browser console for details.");
   }
+  renderPoolSummary();
 }
 
 function renderNextCard() {
@@ -478,7 +502,6 @@ function renderNextCard() {
   renderCandidates();
   els.quizPanel.hidden = false;
   els.showAnswersButton.disabled = false;
-  els.showAnswersButton.style.removeProperty("--countdown-duration");
   els.showAnswersButton.classList.remove("countdown-active");
   scheduleShowAnswers(id);
 }
@@ -495,11 +518,16 @@ function hideStatus() {
 
 function renderPoolSummary() {
   const total = state.words.length;
-  const selected = getSelectedPool().length;
+  const selectedPool = getSelectedPool();
+  const selected = selectedPool.length;
+  const known = countWordsWithLatestGoodAttempt(selectedPool);
   const tagCount = getSelectedTagCount(state.config.selectedTagGroups);
-  const groupCount = getActiveTagGroups(state.config.selectedTagGroups).length;
-  const tagText = tagCount === 0 ? "all tags" : tagCount + " tag" + (tagCount === 1 ? "" : "s") + " in " + groupCount + " list" + (groupCount === 1 ? "" : "s");
-  els.poolSummary.textContent = selected + " of " + total + " words, " + tagText;
+  clearNode(els.poolSummary);
+  els.poolSummary.appendChild(document.createTextNode(known + "/" + selected + "/" + total + ", " + tagCount + " "));
+  const tagIcon = document.createElement("span");
+  tagIcon.className = "summary-tag-icon";
+  tagIcon.textContent = "🏷️";
+  els.poolSummary.appendChild(tagIcon);
 }
 
 function getSelectedPool() {
@@ -531,6 +559,18 @@ function getSelectedTagCount(tagGroups) {
   return (Array.isArray(tagGroups) ? tagGroups : [[]]).reduce(function (total, group) {
     return total + (Array.isArray(group) ? group.length : 0);
   }, 0);
+}
+
+function countWordsWithLatestGoodAttempt(words) {
+  return words.filter(function (word) {
+    for (let i = state.attempts.length - 1; i >= 0; i -= 1) {
+      const attempt = state.attempts[i];
+      if (attempt.word === word.word) {
+        return attempt.answer === attempt.word;
+      }
+    }
+    return false;
+  }).length;
 }
 
 function getQuestionPoolForDirection(pool, direction) {
@@ -923,7 +963,6 @@ function renderCandidates() {
     info.className = "info-button colorless-icon";
     info.type = "button";
     info.setAttribute("aria-label", "Info");
-    info.setAttribute("style", "color: grey; filter: grayscale(100%);");
     info.textContent = "ℹ️";
     info.addEventListener("click", function () {
       openInfoModal(candidate);
@@ -1032,10 +1071,8 @@ function selectCandidate(index) {
 function scheduleShowAnswers(cardId) {
   clearShowTimer();
   const delayMs = state.config.showAnswersDelaySec * 1000;
-  els.showAnswersButton.classList.remove("countdown-active");
-  els.showAnswersButton.style.setProperty("--countdown-duration", Math.max(0.001, state.config.showAnswersDelaySec) + "s");
   if (delayMs > 0) {
-    restartAnimation(els.showAnswersButton, "countdown-active");
+    startCountdownBorder(els.showAnswersButton, "countdown-active", state.config.showAnswersDelaySec, "var(--gold)");
   }
   state.showTimer = window.setTimeout(function () {
     revealAnswers(cardId);
@@ -1064,7 +1101,7 @@ function clearShowTimer() {
     window.clearTimeout(state.showTimer);
     state.showTimer = null;
   }
-  els.showAnswersButton.classList.remove("countdown-active");
+  clearCountdownBorder(els.showAnswersButton, "countdown-active");
 }
 
 function clearNextTimer() {
@@ -1079,7 +1116,7 @@ function clearNextHold() {
     window.clearTimeout(state.nextHoldTimer);
     state.nextHoldTimer = null;
   }
-  els.nextButton.classList.remove("holding");
+  clearCountdownBorder(els.nextButton, "holding");
 }
 
 function clearWrongTimer() {
@@ -1087,17 +1124,19 @@ function clearWrongTimer() {
     window.clearTimeout(state.wrongTimer);
     state.wrongTimer = null;
   }
+  document.querySelectorAll(".candidate-card.wrong.countdown-active").forEach(function (element) {
+    clearCountdownBorder(element, "countdown-active");
+  });
 }
 
 function startNextHold() {
   if (state.nextHoldTimer || !state.currentCard) {
     return;
   }
-  els.nextButton.style.setProperty("--countdown-duration", NEXT_HOLD_MS + "ms");
-  restartAnimation(els.nextButton, "holding");
+  startCountdownBorder(els.nextButton, "holding", NEXT_HOLD_MS / 1000, "var(--gold)");
   state.nextHoldTimer = window.setTimeout(function () {
     state.nextHoldTimer = null;
-    els.nextButton.classList.remove("holding");
+    clearCountdownBorder(els.nextButton, "holding");
     renderNextCard();
   }, NEXT_HOLD_MS);
 }
@@ -1116,11 +1155,10 @@ function scheduleWrongReviewCountdown(cardId) {
   if (!wrongCard) {
     return;
   }
-  wrongCard.style.setProperty("--countdown-duration", state.config.autoNextDelaySec + "s");
-  restartAnimation(wrongCard, "countdown-active");
+  startCountdownBorder(wrongCard, "countdown-active", state.config.autoNextDelaySec, "var(--red-line)");
   state.wrongTimer = window.setTimeout(function () {
     if (state.currentCard && state.currentCard.id === cardId) {
-      wrongCard.classList.remove("countdown-active");
+      clearCountdownBorder(wrongCard, "countdown-active");
     }
     state.wrongTimer = null;
   }, delayMs);
@@ -1130,6 +1168,51 @@ function restartAnimation(element, className) {
   element.classList.remove(className);
   void element.offsetWidth;
   element.classList.add(className);
+}
+
+function startCountdownBorder(element, className, durationSec, color) {
+  clearCountdownBorder(element, className);
+  element.style.setProperty("--countdown-line", color);
+
+  const width = Math.max(1, element.offsetWidth);
+  const height = Math.max(1, element.offsetHeight);
+  const perimeter = (width + height) * 2;
+  const durations = {
+    top: durationSec * width / perimeter,
+    right: durationSec * height / perimeter,
+    bottom: durationSec * width / perimeter,
+    left: durationSec * height / perimeter
+  };
+  const delays = {
+    top: 0,
+    right: durations.top,
+    bottom: durations.top + durations.right,
+    left: durations.top + durations.right + durations.bottom
+  };
+  const edges = document.createElement("span");
+  edges.className = "countdown-edges";
+  edges.setAttribute("aria-hidden", "true");
+
+  ["top", "right", "bottom", "left"].forEach(function (side) {
+    const edge = document.createElement("span");
+    edge.className = "countdown-edge " + side;
+    edge.style.animationDuration = Math.max(0.001, durations[side]) + "s";
+    edge.style.animationDelay = delays[side] + "s";
+    edges.appendChild(edge);
+  });
+
+  element.appendChild(edges);
+  restartAnimation(element, className);
+}
+
+function clearCountdownBorder(element, className) {
+  element.classList.remove(className);
+  Array.from(element.children).forEach(function (child) {
+    if (child.classList.contains("countdown-edges")) {
+      child.remove();
+    }
+  });
+  element.style.removeProperty("--countdown-line");
 }
 
 function openSettingsModal() {
@@ -1400,13 +1483,6 @@ function getAllTags() {
 function openInfoModal(word) {
   const wrapper = document.createElement("div");
 
-  const wordSection = plainModalSection();
-  const wordText = document.createElement("div");
-  wordText.className = "hebrew-text";
-  wordText.textContent = word.word;
-  wordSection.appendChild(wordText);
-  wrapper.appendChild(wordSection);
-
   const answerSection = plainModalSection();
   const details = document.createElement("details");
   const summary = document.createElement("summary");
@@ -1416,22 +1492,24 @@ function openInfoModal(word) {
   answerBlock.style.marginTop = "8px";
   renderInfoAnswer(answerBlock, word);
   details.appendChild(answerBlock);
-  answerSection.appendChild(details);
-  wrapper.appendChild(answerSection);
 
-  const descriptionSection = plainModalSection();
   const description = document.createElement("div");
   description.className = "answer-block";
+  description.style.marginTop = "8px";
   description.textContent = word.description || "No description.";
-  descriptionSection.appendChild(description);
-  wrapper.appendChild(descriptionSection);
+  details.appendChild(description);
+  answerSection.appendChild(details);
+  wrapper.appendChild(answerSection);
 
   const tagsSection = sectionNode("Tags");
   if (word.tags.length) {
     const tagList = document.createElement("div");
-    tagList.className = "recent-list";
+    tagList.className = "inline-tags";
     word.tags.forEach(function (tag) {
-      addPlainLine(tagList, tag);
+      const item = document.createElement("span");
+      item.className = "inline-tag";
+      item.textContent = tag;
+      tagList.appendChild(item);
     });
     tagsSection.appendChild(tagList);
   } else {
@@ -1440,7 +1518,7 @@ function openInfoModal(word) {
   wrapper.appendChild(tagsSection);
 
   appendWordStatsSection(wrapper, word.word);
-  openModal("Info", wrapper);
+  openModal(word.word, wrapper);
 }
 
 function renderInfoAnswer(parent, word) {

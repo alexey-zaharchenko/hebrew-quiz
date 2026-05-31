@@ -1,11 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Bellefair&family=David+Libre&family=Gveret+Levin&family=Playpen+Sans+Hebrew:wght@100&family=Secular+One&family=Suez+One&family=Tinos&display=swap");
 
-@property --ring-progress {
-  syntax: "<percentage>";
-  inherits: false;
-  initial-value: 100%;
-}
-
 :root {
   color-scheme: light;
   --bg: #f7f4ee;
@@ -21,7 +15,6 @@
   --red-line: #b33a2f;
   --gold: #9a6a13;
   --shadow: 0 14px 34px rgba(31, 35, 40, 0.18);
-  --ring-progress: 100%;
 }
 
 * {
@@ -75,10 +68,18 @@ button:disabled {
 
 .app-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   padding: 4px 0 10px;
+}
+
+.title-line {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .app-header h1 {
@@ -88,9 +89,32 @@ button:disabled {
 }
 
 .app-header p {
-  margin: 2px 0 0;
+  margin: 0;
   color: var(--muted);
   font-size: 0.88rem;
+}
+
+.title-option[hidden] {
+  display: none;
+}
+
+.owl-flag-title {
+  position: relative;
+  display: inline-block;
+  width: 1.45em;
+  line-height: 1;
+}
+
+.owl-flag-title .under-flag {
+  position: absolute;
+  left: 0.56em;
+  top: 0.48em;
+  font-size: 0.7em;
+}
+
+.summary-tag-icon {
+  filter: grayscale(100%);
+  opacity: 0.25;
 }
 
 .quiz-main {
@@ -130,7 +154,7 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 44px 16px 16px;
+  padding: 16px;
 }
 
 .question-content {
@@ -170,6 +194,7 @@ button:disabled {
   background: transparent;
   font-size: 1.2rem;
   line-height: 1;
+  opacity: 0.25;
 }
 
 .action-row {
@@ -214,23 +239,79 @@ button:disabled {
 
 .countdown-active,
 .hold-next-button.holding {
-  border-color: transparent;
-  background:
-    linear-gradient(var(--panel), var(--panel)) padding-box,
-    conic-gradient(from -90deg, var(--gold) var(--ring-progress), var(--line) 0) border-box;
-  animation: countdown-ring var(--countdown-duration, 1s) linear forwards;
+  border-color: var(--line);
 }
 
 .hold-next-button.holding {
   transform: scale(0.98);
 }
 
-@keyframes countdown-ring {
-  from {
-    --ring-progress: 100%;
-  }
+.countdown-control:disabled .button-label {
+  color: transparent;
+}
+
+.countdown-edges {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.countdown-edge {
+  position: absolute;
+  display: block;
+  background: var(--countdown-line, var(--gold));
+  animation-fill-mode: forwards;
+  animation-timing-function: linear;
+}
+
+.countdown-edge.top,
+.countdown-edge.bottom {
+  height: 2px;
+  width: 100%;
+  animation-name: countdown-edge-x;
+}
+
+.countdown-edge.right,
+.countdown-edge.left {
+  width: 2px;
+  height: 100%;
+  animation-name: countdown-edge-y;
+}
+
+.countdown-edge.top {
+  top: 0;
+  left: 0;
+  transform-origin: right center;
+}
+
+.countdown-edge.right {
+  top: 0;
+  right: 0;
+  transform-origin: center bottom;
+}
+
+.countdown-edge.bottom {
+  right: 0;
+  bottom: 0;
+  transform-origin: left center;
+}
+
+.countdown-edge.left {
+  bottom: 0;
+  left: 0;
+  transform-origin: center top;
+}
+
+@keyframes countdown-edge-x {
   to {
-    --ring-progress: 0%;
+    transform: scaleX(0);
+  }
+}
+
+@keyframes countdown-edge-y {
+  to {
+    transform: scaleY(0);
   }
 }
 
@@ -256,7 +337,7 @@ button:disabled {
   border-radius: 0;
   background: transparent;
   color: var(--ink);
-  padding: 14px 44px 14px 14px;
+  padding: 14px;
   overflow: hidden;
   text-align: center;
 }
@@ -307,10 +388,8 @@ button:disabled {
 }
 
 .candidate-card.wrong.countdown-active {
-  border-color: transparent;
-  background:
-    linear-gradient(var(--red-bg), var(--red-bg)) padding-box,
-    conic-gradient(from -90deg, var(--red-line) var(--ring-progress), var(--line) 0) border-box;
+  border-color: var(--line);
+  background: var(--red-bg);
 }
 
 .modal-backdrop {
@@ -524,10 +603,14 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 
-.hebrew-text {
-  direction: rtl;
-  font-size: 1.8rem;
-  font-weight: 750;
+.inline-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.inline-tag {
+  color: var(--ink);
 }
 
 .answer-image {

@@ -9,8 +9,15 @@
   <body>
     <div class="app-shell">
       <header class="app-header">
-        <div>
-          <h1>Hebrew Ulpan</h1>
+        <div class="title-line">
+          <h1 id="appTitle" class="app-title" aria-label="Hebrew Ulpan">
+            <span class="title-option" data-title-weight="3" hidden>🥙</span>
+            <span class="title-option" data-title-weight="3" hidden>🧆</span>
+            <span class="title-option owl-flag-title" data-title-weight="3" hidden><span>🦉</span><span class="under-flag">🇮🇱</span></span>
+            <span class="title-option" data-title-weight="3" hidden>✡️</span>
+            <span class="title-option" data-title-weight="3" hidden>🕎</span>
+            <span class="title-option" data-title-default hidden>🇮🇱🧠</span>
+          </h1>
           <p id="poolSummary">Loading vocabulary...</p>
         </div>
         <button id="settingsButton" class="icon-button colorless-icon" type="button" aria-label="Stats and settings" style="color: grey; filter: grayscale(100%);">📈⚙️</button>
@@ -21,12 +28,12 @@
 
         <section id="quizPanel" class="quiz-panel" hidden>
           <div class="action-row">
-            <button id="showAnswersButton" class="secondary-button countdown-control" type="button">Show answers</button>
-            <button id="nextButton" class="secondary-button hold-next-button" type="button">Next</button>
+            <button id="showAnswersButton" class="secondary-button countdown-control" type="button"><span class="button-label">Show answers</span></button>
+            <button id="nextButton" class="secondary-button hold-next-button" type="button"><span class="button-label">Next</span></button>
           </div>
 
           <article class="question-card">
-            <button id="questionInfoButton" class="info-button colorless-icon" type="button" aria-label="Info" style="color: grey; filter: grayscale(100%);">ℹ️</button>
+            <button id="questionInfoButton" class="info-button colorless-icon" type="button" aria-label="Info">ℹ️</button>
             <div id="questionContent" class="question-content card-text"></div>
           </article>
 
@@ -39,7 +46,7 @@
       <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <header class="modal-header">
           <h2 id="modalTitle"></h2>
-          <button id="modalCloseButton" class="secondary-button" type="button">Close</button>
+          <button id="modalCloseButton" class="secondary-button" type="button" aria-label="Close">X</button>
         </header>
         <div id="modalBody" class="modal-body"></div>
       </section>

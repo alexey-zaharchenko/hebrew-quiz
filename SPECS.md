@@ -649,6 +649,19 @@ if candidateMin > candidateMax, set candidateMax = candidateMin
 
 The header contains a small button in the corner.
 
+The main header title is randomly selected on each page load from hidden HTML title options.
+
+Each non-default icon title has a 3% chance; 🇮🇱🧠 is used for the remaining chance.
+
+The header summary is shown on the title line as:
+
+x/y/z, i 🏷️
+
+x = words in the current selected pool whose latest saved attempt is correct.
+y = words in the current selected pool.
+z = total loaded words.
+i = selected tag count.
+
 Clicking it opens a centered modal popup with backdrop.
 
 The same modal-open/close logic can be reused for Info modals.
@@ -840,9 +853,11 @@ The visible label is the ℹ️ symbol.
 
 The button is colorless:
 
-style="color: grey; filter: grayscale(100%);"
+75% transparent, grayscale icon treatment.
 
 The button is positioned in the top right corner of the question card and each answer candidate card.
+
+The button must be absolutely positioned and must not reserve text layout space in the card.
 
 Info opens a centered modal popup with backdrop.
 
@@ -852,14 +867,18 @@ For a candidate card, Info opens information for that candidate word.
 
 The info modal includes:
 
-word as stored after cleanup, with niqqud if present
+word as stored after cleanup, with niqqud if present, as modal title
 answer
 description
 tags
 detailed stats
 answer spoiler
 
-The info modal does not show a separate plain word without niqqud.
+The info modal does not repeat the word in the modal body.
+
+Tags are shown inline.
+
+Description is hidden inside the same answer spoiler details because it may contain answer spoilers.
 
 16.1 Info modal behavior
 
@@ -1121,6 +1140,8 @@ Do not show text labels such as "Correct answer" or "Selected answer".
 
 Color is enough for feedback.
 
+Countdown border animation should move at constant linear speed around the element perimeter, so vertical and horizontal border progress are not distorted by element proportions.
+
 ⸻
 
 20. Main card and candidate card layout
@@ -1130,6 +1151,8 @@ Question card and candidate cards should have fixed height.
 Use large text on cards.
 
 For text on question and candidate cards, scale font size down when needed so card text does not create an internal scrollbar.
+
+When the Show answers button is disabled, its label is fully transparent.
 
 On iPhone-size screens:
 
