@@ -880,6 +880,35 @@ Tags are shown inline.
 
 Description is hidden inside the same answer spoiler details because it may contain answer spoilers.
 
+⸻
+
+16.5 Hebrew text-to-speech
+
+The app uses the browser built-in Web Speech API only.
+
+No external text-to-speech service is used.
+
+The app shows a text-to-speech button:
+
+next to the word in the info modal title
+on the upper left side of the question card, only when the question card shows a Hebrew word
+
+The visible label is the 🔊 symbol.
+
+The button is colorless:
+
+75% transparent, grayscale icon treatment.
+
+When clicked, the button reads the cleaned stored Hebrew word for that card or modal.
+
+The spoken value preserves niqqud if present.
+
+The speech utterance language is Hebrew:
+
+he-IL
+
+If browser speech synthesis is unavailable, clicking the button logs a console warning and does not change quiz state.
+
 16.1 Info modal behavior
 
 Rules:

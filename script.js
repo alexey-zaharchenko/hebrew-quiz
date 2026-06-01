@@ -394,6 +394,7 @@ function collectElements() {
   els.statusPanel = document.getElementById("statusPanel");
   els.quizPanel = document.getElementById("quizPanel");
   els.questionInfoButton = document.getElementById("questionInfoButton");
+  els.questionSpeakButton = document.getElementById("questionSpeakButton");
   els.questionContent = document.getElementById("questionContent");
   els.showAnswersButton = document.getElementById("showAnswersButton");
   els.nextButton = document.getElementById("nextButton");
@@ -410,6 +411,11 @@ function bindStaticEvents() {
   els.questionInfoButton.addEventListener("click", function () {
     if (state.currentCard) {
       openInfoModal(state.currentCard.word);
+    }
+  });
+  els.questionSpeakButton.addEventListener("click", function () {
+    if (state.currentCard && state.currentCard.direction === "hebrew-to-answer") {
+      speakHebrewWord(state.currentCard.word.word);
     }
   });
   els.showAnswersButton.addEventListener("click", function () {
@@ -1215,6 +1221,7 @@ function renderQuestion() {
   els.questionContent.className = "question-content";
   applyFontToElement(els.questionContent, card.font);
   if (card.direction === "hebrew-to-answer") {
+    els.questionSpeakButton.hidden = false;
     els.questionContent.dir = "rtl";
     const text = document.createElement("span");
     text.className = "question-text card-text";
@@ -1222,6 +1229,7 @@ function renderQuestion() {
     markFitText(text, 16, 96);
     els.questionContent.appendChild(text);
   } else {
+    els.questionSpeakButton.hidden = true;
     els.questionContent.dir = "auto";
     renderAnswerEntity(els.questionContent, card.word, true);
   }
@@ -1805,7 +1813,7 @@ function openInfoModal(word) {
   wrapper.appendChild(tagsSection);
 
   appendWordStatsSection(wrapper, word.word);
-  openModal(word.word, wrapper);
+  openModal(word.word, wrapper, word.word);
 }
 
 function renderInfoAnswer(parent, word) {
@@ -2014,8 +2022,27 @@ function numberField(labelText, value, min, max) {
   return { row: row, input: input };
 }
 
-function openModal(title, bodyNode) {
-  els.modalTitle.textContent = title;
+function openModal(title, bodyNode, speakWord) {
+  clearNode(els.modalTitle);
+  if (speakWord) {
+    const titleRow = document.createElement("span");
+    titleRow.className = "modal-title-row";
+    const titleText = document.createElement("span");
+    titleText.textContent = title;
+    const speakButton = document.createElement("button");
+    speakButton.className = "speak-button colorless-icon";
+    speakButton.type = "button";
+    speakButton.setAttribute("aria-label", "Read Hebrew word");
+    speakButton.textContent = "🔊";
+    speakButton.addEventListener("click", function () {
+      speakHebrewWord(speakWord);
+    });
+    titleRow.appendChild(titleText);
+    titleRow.appendChild(speakButton);
+    els.modalTitle.appendChild(titleRow);
+  } else {
+    els.modalTitle.textContent = title;
+  }
   clearNode(els.modalBody);
   els.modalBody.appendChild(bodyNode);
   els.modalBackdrop.hidden = false;
@@ -2031,6 +2058,21 @@ function clearNode(node) {
   while (node.firstChild) {
     node.removeChild(node.firstChild);
   }
+}
+
+function speakHebrewWord(wordValue) {
+  const value = String(wordValue || "").trim();
+  if (!value) {
+    return;
+  }
+  if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+    console.warn("Speech synthesis is not available in this browser.");
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(value);
+  utterance.lang = "he-IL";
+  window.speechSynthesis.speak(utterance);
 }
 
 function alertAndLog(message, error) {

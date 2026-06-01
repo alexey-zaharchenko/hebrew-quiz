@@ -215,10 +215,10 @@ button:disabled {
   object-fit: contain;
 }
 
-.info-button {
+.info-button,
+.speak-button {
   position: absolute;
   top: 8px;
-  right: 8px;
   z-index: 2;
   width: 36px;
   min-width: 36px;
@@ -229,6 +229,18 @@ button:disabled {
   font-size: 1.2rem;
   line-height: 1;
   opacity: 0.25;
+}
+
+.info-button {
+  right: 8px;
+}
+
+.question-speak-button {
+  left: 8px;
+}
+
+.speak-button[hidden] {
+  display: none;
 }
 
 .action-row {
@@ -501,6 +513,20 @@ button:disabled {
   margin: 0;
   font-size: 1.1rem;
   letter-spacing: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.modal-title-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-title-row .speak-button {
+  position: static;
+  flex: 0 0 auto;
 }
 
 .modal-body {
