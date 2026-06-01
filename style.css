@@ -232,7 +232,12 @@ button:disabled {
 }
 
 .info-button {
-  right: 8px;
+  top: 0;
+  right: 0;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 8px;
 }
 
 .question-speak-button {
@@ -313,14 +318,14 @@ button:disabled {
 
 .countdown-edge.top,
 .countdown-edge.bottom {
-  height: 2px;
+  height: 4px;
   width: 100%;
   animation-name: countdown-edge-x;
 }
 
 .countdown-edge.right,
 .countdown-edge.left {
-  width: 2px;
+  width: 4px;
   height: 100%;
   animation-name: countdown-edge-y;
 }
@@ -390,8 +395,8 @@ button:disabled {
 
 .candidate-card .info-button {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 0;
+  right: 0;
 }
 
 .candidate-text {
@@ -578,6 +583,7 @@ button:disabled {
   display: grid;
   grid-template-columns: 1fr;
   gap: 10px;
+  margin-top: 12px;
 }
 
 .field-row {
@@ -606,6 +612,11 @@ button:disabled {
 .font-list {
   display: grid;
   gap: 8px;
+}
+
+.sheet-link {
+  color: var(--accent);
+  font-weight: 800;
 }
 
 .radio-row,

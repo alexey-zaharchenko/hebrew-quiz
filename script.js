@@ -18,7 +18,7 @@ const HEBREW_MARKS_RE = /[\u0591-\u05C7]/g;
 const INVISIBLE_DIRT_RE = /[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF\u2060]/g;
 const HORIZONTAL_SPACE_RE = /[ \t\f\v\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]+/g;
 const ANY_SPACE_RE = /\s+/g;
-const NEXT_HOLD_MS = 1000;
+const NEXT_HOLD_MS = 500;
 const FONT_SAMPLE = "אבגדה";
 const FONT_OPTIONS = [
   { key: "system", label: "system font", family: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", weight: "700" },
@@ -1516,11 +1516,23 @@ function openSettingsModal() {
 
 function buildSettingsContent() {
   const wrapper = document.createElement("div");
+  appendSpreadsheetLinkSection(wrapper);
   appendStatsSection(wrapper);
-  appendSettingsSection(wrapper);
-  appendFontsSection(wrapper);
   appendTagsSection(wrapper);
+  appendSettingsSection(wrapper);
   return wrapper;
+}
+
+function appendSpreadsheetLinkSection(wrapper) {
+  const section = sectionNode("Spreadsheet link");
+  const link = document.createElement("a");
+  link.className = "sheet-link";
+  link.href = DEFAULT_CONFIG.sheetUrl;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.textContent = "Open spreadsheet";
+  section.appendChild(link);
+  wrapper.appendChild(section);
 }
 
 function appendStatsSection(wrapper) {
@@ -1554,6 +1566,7 @@ function appendStatsSection(wrapper) {
 
 function appendSettingsSection(wrapper) {
   const section = sectionNode("Settings");
+  const fonts = buildFontList();
   const grid = document.createElement("div");
   grid.className = "settings-grid";
 
@@ -1605,12 +1618,12 @@ function appendSettingsSection(wrapper) {
   grid.appendChild(minCount.row);
   grid.appendChild(maxCount.row);
 
+  section.appendChild(fonts);
   section.appendChild(grid);
   wrapper.appendChild(section);
 }
 
-function appendFontsSection(wrapper) {
-  const section = sectionNode("Fonts");
+function buildFontList() {
   const selected = new Set(state.config.selectedFonts || []);
   const list = document.createElement("div");
   list.className = "font-list";
@@ -1644,8 +1657,7 @@ function appendFontsSection(wrapper) {
     list.appendChild(row);
   });
 
-  section.appendChild(list);
-  wrapper.appendChild(section);
+  return list;
 }
 
 function appendTagsSection(wrapper) {

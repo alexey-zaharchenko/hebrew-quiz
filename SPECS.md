@@ -585,6 +585,7 @@ maximum value is 60 seconds
 user can always click Show answers manually before the timer fires
 no countdown display
 while the show-answer timer is running, animate a countdown border around the Show answers button
+the animated countdown border is thicker than the normal button border
 
 The max is intentionally large enough to support slow recall.
 
@@ -604,7 +605,7 @@ Rules:
 maximum value is 60 seconds
 user can always click Next manually before the timer fires
 no countdown display
-manual Next requires pressing/holding the Next button for 1 second
+manual Next requires pressing/holding the Next button for 0.5 seconds
 the Next button shows a press animation while it is being held
 
 Important:
@@ -668,6 +669,7 @@ The same modal-open/close logic can be reused for Info modals.
 
 This combined modal contains:
 
+spreadsheet link
 statistics
 direction mode
 show answers delay
@@ -688,9 +690,12 @@ No separate pause/disable controls are needed beyond changing the settings value
 
 Suggested layout order:
 
-stats first
-settings second
+spreadsheet link first
+stats second
 tags third
+settings fourth
+
+Font controls are shown inside the same Settings section as the other settings controls.
 
 Changing settings affects new behavior immediately where reasonable.
 
@@ -858,6 +863,10 @@ The button is colorless:
 The button is positioned in the top right corner of the question card and each answer candidate card.
 
 The button must be absolutely positioned and must not reserve text layout space in the card.
+
+The button position is top: 0 and right: 0.
+
+The click target is larger than the visible icon and uses the same border radius as emoji/icon buttons.
 
 Info opens a centered modal popup with backdrop.
 
@@ -1170,6 +1179,8 @@ Do not show text labels such as "Correct answer" or "Selected answer".
 Color is enough for feedback.
 
 Countdown border animation should move at constant linear speed around the element perimeter, so vertical and horizontal border progress are not distorted by element proportions.
+
+Countdown border thickness is 4px.
 
 ⸻
 
