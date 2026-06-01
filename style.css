@@ -193,7 +193,7 @@ button:disabled {
   text-align: center;
   font-size: clamp(24px, 18cqmin, 72px);
   font-weight: 750;
-  line-height: 1.08;
+  line-height: 1.18;
   letter-spacing: 0;
   white-space: normal;
   overflow-wrap: normal;
@@ -388,7 +388,7 @@ button:disabled {
   max-height: 100%;
   font-size: clamp(16px, 13cqmin, 48px);
   font-weight: 700;
-  line-height: 1.08;
+  line-height: 1.18;
   letter-spacing: 0;
   white-space: normal;
   overflow: hidden;
@@ -402,6 +402,32 @@ button:disabled {
 .candidate-text.hebrew {
   direction: rtl;
   font-size: clamp(20px, 16cqmin, 64px);
+}
+
+.question-text {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  font: inherit;
+}
+
+[data-fit-text],
+.js-fit-text {
+  box-sizing: border-box;
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  text-align: center;
+  line-height: 1.18;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+  text-wrap: balance;
+  direction: auto;
+  unicode-bidi: plaintext;
+  overflow: hidden;
+  overflow: clip;
 }
 
 .candidate-choice img {
@@ -694,7 +720,9 @@ summary {
 
 @supports (text-wrap: pretty) {
   .question-content,
-  .candidate-text {
+  .candidate-text,
+  [data-fit-text],
+  .js-fit-text {
     text-wrap: pretty;
   }
 }

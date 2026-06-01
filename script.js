@@ -34,6 +34,309 @@ const FONT_OPTIONS = [
   { key: "miri", label: "מירי", family: "'Miri', 'מירי', sans-serif", weight: "400" }
 ];
 
+(() => {
+  const SELECTOR = "[data-fit-text], .js-fit-text";
+  const DEFAULTS = {
+    min: 16,
+    max: 96,
+    precision: 0.5,
+    parent: null
+  };
+  const fittedElements = new Set();
+  const fittedElementBoxes = new WeakMap();
+  const observedBoxCounts = new Map();
+  let scheduled = false;
+  let resizeObserver;
+  let mutationObserver;
+
+  function readNumberAttr(el, name, fallback) {
+    const raw = el.getAttribute(name);
+    if (raw == null || raw === "") {
+      return fallback;
+    }
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : fallback;
+  }
+
+  function getOptions(el) {
+    return {
+      min: readNumberAttr(el, "data-fit-min", DEFAULTS.min),
+      max: readNumberAttr(el, "data-fit-max", DEFAULTS.max),
+      precision: readNumberAttr(el, "data-fit-precision", DEFAULTS.precision),
+      parent: el.getAttribute("data-fit-parent") || DEFAULTS.parent
+    };
+  }
+
+  function getFitBox(el, options) {
+    if (options.parent) {
+      return el.closest(options.parent);
+    }
+    const explicitBox = el.closest(".cardFitBox");
+    if (explicitBox) {
+      return explicitBox;
+    }
+    return el.parentElement;
+  }
+
+  function getInnerSize(box) {
+    const style = getComputedStyle(box);
+    const width = box.clientWidth - parseFloat(style.paddingLeft || "0") - parseFloat(style.paddingRight || "0");
+    const height = box.clientHeight - parseFloat(style.paddingTop || "0") - parseFloat(style.paddingBottom || "0");
+    return {
+      width: Math.max(0, width),
+      height: Math.max(0, height)
+    };
+  }
+
+  function isMeasurable(el, box) {
+    if (!el || !box) {
+      return false;
+    }
+    if (!el.isConnected || !box.isConnected) {
+      return false;
+    }
+    const boxRect = box.getBoundingClientRect();
+    return boxRect.width > 0 && boxRect.height > 0;
+  }
+
+  function prepareElement(el) {
+    const style = el.style;
+    style.boxSizing = "border-box";
+    style.display = "block";
+    style.maxWidth = "100%";
+    style.maxHeight = "100%";
+    style.whiteSpace = "normal";
+    style.overflowWrap = "normal";
+    style.wordBreak = "normal";
+    style.hyphens = "none";
+    style.overflow = "hidden";
+  }
+
+  function fits(el, width, height) {
+    return el.scrollWidth <= width + 1 && el.scrollHeight <= height + 1;
+  }
+
+  function fitTextToBox(el) {
+    if (!(el instanceof HTMLElement)) {
+      return false;
+    }
+    const options = getOptions(el);
+    const box = getFitBox(el, options);
+    if (!isMeasurable(el, box)) {
+      return false;
+    }
+    const size = getInnerSize(box);
+    if (size.width <= 0 || size.height <= 0) {
+      return false;
+    }
+
+    const min = Math.max(1, options.min);
+    const max = Math.max(min, options.max);
+    const precision = Math.max(0.1, options.precision);
+    prepareElement(el);
+
+    el.style.fontSize = min + "px";
+    if (!fits(el, size.width, size.height)) {
+      el.dataset.fitTextStatus = "min-clipped";
+      return true;
+    }
+
+    let low = min;
+    let high = max;
+    let best = min;
+    while (high - low > precision) {
+      const mid = (low + high) / 2;
+      el.style.fontSize = mid + "px";
+      if (fits(el, size.width, size.height)) {
+        best = mid;
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+    el.style.fontSize = best + "px";
+    el.dataset.fitTextStatus = "fitted";
+    return true;
+  }
+
+  function fitAll() {
+    scheduled = false;
+    fittedElements.forEach(function (el) {
+      if (!el.isConnected) {
+        unregisterFitText(el);
+        return;
+      }
+      fitTextToBox(el);
+    });
+  }
+
+  function scheduleFitAll() {
+    if (scheduled) {
+      return;
+    }
+    scheduled = true;
+    requestAnimationFrame(fitAll);
+  }
+
+  function registerFitText(el) {
+    if (!(el instanceof HTMLElement)) {
+      return;
+    }
+    fittedElements.add(el);
+    const options = getOptions(el);
+    const box = getFitBox(el, options);
+    const previousBox = fittedElementBoxes.get(el);
+    if (previousBox !== box) {
+      unobserveFitBox(previousBox);
+      if (box) {
+        observeFitBox(box);
+        fittedElementBoxes.set(el, box);
+      } else {
+        fittedElementBoxes.delete(el);
+      }
+    }
+    scheduleFitAll();
+  }
+
+  function unregisterFitText(el) {
+    if (!(el instanceof HTMLElement)) {
+      return;
+    }
+    fittedElements.delete(el);
+    unobserveFitBox(fittedElementBoxes.get(el));
+    fittedElementBoxes.delete(el);
+  }
+
+  function observeFitBox(box) {
+    const count = observedBoxCounts.get(box) || 0;
+    observedBoxCounts.set(box, count + 1);
+    if (count === 0 && resizeObserver) {
+      resizeObserver.observe(box);
+    }
+  }
+
+  function unobserveFitBox(box) {
+    if (!box) {
+      return;
+    }
+    const count = observedBoxCounts.get(box) || 0;
+    if (count <= 1) {
+      observedBoxCounts.delete(box);
+      resizeObserver?.unobserve(box);
+      return;
+    }
+    observedBoxCounts.set(box, count - 1);
+  }
+
+  function scan(root = document) {
+    if (root instanceof Element && root.matches(SELECTOR)) {
+      registerFitText(root);
+    }
+    root.querySelectorAll?.(SELECTOR).forEach(registerFitText);
+  }
+
+  function handleMutations(mutations) {
+    let shouldRefit = false;
+    for (const mutation of mutations) {
+      if (mutation.type === "characterData") {
+        shouldRefit = true;
+        continue;
+      }
+      if (mutation.type === "attributes") {
+        const target = mutation.target;
+        if (target instanceof Element) {
+          if (target.matches(SELECTOR)) {
+            registerFitText(target);
+          } else {
+            unregisterFitText(target);
+          }
+          shouldRefit = true;
+        }
+        continue;
+      }
+      if (mutation.type === "childList") {
+        shouldRefit = true;
+        mutation.addedNodes.forEach(function (node) {
+          if (!(node instanceof Element)) {
+            return;
+          }
+          scan(node);
+        });
+        mutation.removedNodes.forEach(function (node) {
+          if (!(node instanceof Element)) {
+            return;
+          }
+          if (node.matches(SELECTOR)) {
+            unregisterFitText(node);
+          }
+          node.querySelectorAll?.(SELECTOR).forEach(unregisterFitText);
+        });
+      }
+    }
+    if (shouldRefit) {
+      scheduleFitAll();
+    }
+  }
+
+  function initFitText(root = document) {
+    if (!resizeObserver && "ResizeObserver" in window) {
+      resizeObserver = new ResizeObserver(scheduleFitAll);
+    }
+    if (!mutationObserver && "MutationObserver" in window) {
+      mutationObserver = new MutationObserver(handleMutations);
+    }
+    scan(root);
+    if (mutationObserver) {
+      const observeRoot = root instanceof Document ? document.body || document.documentElement : root;
+      mutationObserver.observe(observeRoot, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: [
+          "data-fit-text",
+          "data-fit-min",
+          "data-fit-max",
+          "data-fit-precision",
+          "data-fit-parent",
+          "class"
+        ]
+      });
+    }
+    scheduleFitAll();
+  }
+
+  function destroyFitText() {
+    resizeObserver?.disconnect();
+    mutationObserver?.disconnect();
+    fittedElements.clear();
+    observedBoxCounts.clear();
+    scheduled = false;
+    resizeObserver = null;
+    mutationObserver = null;
+  }
+
+  window.fitTextToBox = fitTextToBox;
+  window.fitAllTextToBoxes = scheduleFitAll;
+  window.initFitText = initFitText;
+  window.destroyFitText = destroyFitText;
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      initFitText();
+    });
+  } else {
+    initFitText();
+  }
+  if (document.fonts?.ready) {
+    document.fonts.ready.then(scheduleFitAll).catch(function () {});
+  }
+  window.addEventListener("load", scheduleFitAll);
+  window.addEventListener("orientationchange", scheduleFitAll);
+  window.addEventListener("pageshow", scheduleFitAll);
+  document.addEventListener("visibilitychange", scheduleFitAll);
+})();
+
 const state = {
   words: [],
   attempts: [],
@@ -652,6 +955,7 @@ function applyFontToVisibleCardText(font) {
   document.querySelectorAll(".candidate-choice").forEach(function (element) {
     applyFontToElement(element, font);
   });
+  scheduleCardTextFit();
 }
 
 // Weighted next-word selection uses attempt array order, never timestamps.
@@ -912,11 +1216,16 @@ function renderQuestion() {
   applyFontToElement(els.questionContent, card.font);
   if (card.direction === "hebrew-to-answer") {
     els.questionContent.dir = "rtl";
-    els.questionContent.textContent = stripHebrewMarks(card.word.word);
+    const text = document.createElement("span");
+    text.className = "question-text card-text";
+    text.textContent = stripHebrewMarks(card.word.word);
+    markFitText(text, 16, 96);
+    els.questionContent.appendChild(text);
   } else {
     els.questionContent.dir = "auto";
     renderAnswerEntity(els.questionContent, card.word, true);
   }
+  scheduleCardTextFit();
 }
 
 function renderCandidates() {
@@ -953,6 +1262,7 @@ function renderCandidates() {
       const text = document.createElement("span");
       text.className = "candidate-text hebrew card-text";
       text.textContent = card.showHebrewNiqqud ? candidate.word : stripHebrewMarks(candidate.word);
+      markFitText(text, 16, 96);
       choice.appendChild(text);
     }
 
@@ -969,6 +1279,7 @@ function renderCandidates() {
     candidateCard.appendChild(info);
     els.candidateList.appendChild(candidateCard);
   });
+  scheduleCardTextFit();
 }
 
 function renderAnswerEntity(parent, word, isQuestion) {
@@ -981,12 +1292,26 @@ function renderAnswerEntity(parent, word, isQuestion) {
   }
 
   const text = document.createElement("span");
-  text.className = isQuestion ? "card-text" : "candidate-text card-text";
+  text.className = isQuestion ? "question-text card-text" : "candidate-text card-text";
   text.textContent = word.answer;
+  markFitText(text, 16, 96);
   if (isQuestion) {
     parent.classList.add("answer-text");
   }
   parent.appendChild(text);
+}
+
+function markFitText(element, min, max) {
+  element.setAttribute("data-fit-text", "");
+  element.setAttribute("data-fit-min", String(min));
+  element.setAttribute("data-fit-max", String(max));
+  element.setAttribute("data-fit-precision", "0.5");
+}
+
+function scheduleCardTextFit() {
+  if (window.fitAllTextToBoxes) {
+    window.fitAllTextToBoxes();
+  }
 }
 
 function applyFontToElement(element, font) {

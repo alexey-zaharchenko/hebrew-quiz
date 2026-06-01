@@ -1164,13 +1164,19 @@ Candidate cards may be shown in one or two columns depending on available width 
 
 Do not make the page, quiz panel, or candidate list vertically scrollable.
 
-Use container query units so card text size depends on the card size.
+Use container query units so card text size has a layout-safe fallback based on card size.
 
-Text should be large and readable, but exact maximum fitting is not required.
+Card text elements opt into measured fitting with data-fit-text or .js-fit-text.
+
+The measured fit-text utility chooses the largest font size that fits inside the existing card text area.
+
+The fit-text utility may measure text and set font size, but must not create rows, columns, scrollbars, or otherwise control the card layout.
+
+Refit card text after render, card size changes, viewport/orientation changes, font loads, dynamic text/card changes, and iOS Safari pageshow restoration.
 
 Words must never be split in the middle. Phrases may wrap between words. If a too-long single word cannot fit, clipping is acceptable.
 
-Do not use JavaScript-based text measuring or font-size fitting.
+If text cannot fit at the minimum font size, keep the minimum font size and clip overflow.
 
 When the Show answers button is disabled, its label is fully transparent.
 
