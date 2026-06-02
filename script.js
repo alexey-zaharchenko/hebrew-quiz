@@ -1524,14 +1524,17 @@ function buildSettingsContent() {
 }
 
 function appendSpreadsheetLinkSection(wrapper) {
-  const section = sectionNode("Spreadsheet link");
+  const section = document.createElement("section");
+  section.className = "modal-section sheet-link-section";
+  const title = document.createElement("h3");
   const link = document.createElement("a");
   link.className = "sheet-link";
   link.href = DEFAULT_CONFIG.sheetUrl;
   link.target = "_blank";
   link.rel = "noopener noreferrer";
-  link.textContent = "Open spreadsheet";
-  section.appendChild(link);
+  link.textContent = "Open all words dictionary";
+  title.appendChild(link);
+  section.appendChild(title);
   wrapper.appendChild(section);
 }
 
@@ -1553,12 +1556,7 @@ function appendStatsSection(wrapper) {
     title.textContent = "Common confusions";
     title.style.marginTop = "14px";
     section.appendChild(title);
-    const recent = document.createElement("div");
-    recent.className = "recent-list";
-    stats.commonConfusions.slice(0, 5).forEach(function (item) {
-      addPlainLine(recent, item.label + ": " + item.count);
-    });
-    section.appendChild(recent);
+    section.appendChild(buildCommonConfusionsTable(stats.commonConfusions.slice(0, 5)));
   }
 
   wrapper.appendChild(section);
@@ -1664,48 +1662,14 @@ function appendTagsSection(wrapper) {
   const section = sectionNode("Tags");
   const tags = getAllTags();
   state.config.selectedTagGroups.forEach(function (group, groupIndex) {
-    section.appendChild(buildTagGroup(tags, group, groupIndex));
+    section.appendChild(buildTagGroup(tags, group, groupIndex, groupIndex === state.config.selectedTagGroups.length - 1));
   });
-
-  const addList = document.createElement("button");
-  addList.type = "button";
-  addList.className = "secondary-button";
-  addList.textContent = "Add another list";
-  addList.addEventListener("click", function () {
-    state.config.selectedTagGroups.push([]);
-    saveConfig();
-    openSettingsModal();
-  });
-  section.appendChild(addList);
   wrapper.appendChild(section);
 }
 
-function buildTagGroup(tags, selectedTags, groupIndex) {
+function buildTagGroup(tags, selectedTags, groupIndex, isLastGroup) {
   const group = document.createElement("div");
   group.className = "tag-group";
-
-  const header = document.createElement("div");
-  header.className = "tag-group-header";
-  const title = document.createElement("h3");
-  title.textContent = "Tag list " + (groupIndex + 1);
-  header.appendChild(title);
-  if (groupIndex > 0) {
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "secondary-button";
-    remove.textContent = "Remove list";
-    remove.addEventListener("click", function () {
-      state.config.selectedTagGroups.splice(groupIndex, 1);
-      if (state.config.selectedTagGroups.length === 0) {
-        state.config.selectedTagGroups = [[]];
-      }
-      saveConfig();
-      renderPoolSummary();
-      openSettingsModal();
-    });
-    header.appendChild(remove);
-  }
-  group.appendChild(header);
 
   const list = document.createElement("div");
   list.className = "tag-list";
@@ -1754,7 +1718,49 @@ function buildTagGroup(tags, selectedTags, groupIndex) {
     addPlainLine(list, "No tags in current sheet.");
   }
   group.appendChild(list);
+  if (groupIndex > 0 || isLastGroup) {
+    group.appendChild(buildTagListActions(groupIndex, isLastGroup));
+  }
   return group;
+}
+
+function buildTagListActions(groupIndex, isLastGroup) {
+  const actions = document.createElement("div");
+  actions.className = "tag-list-actions";
+
+  if (groupIndex > 0) {
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "secondary-button small-button";
+    remove.textContent = "Remove list";
+    remove.addEventListener("click", function () {
+      state.config.selectedTagGroups.splice(groupIndex, 1);
+      if (state.config.selectedTagGroups.length === 0) {
+        state.config.selectedTagGroups = [[]];
+      }
+      saveConfig();
+      renderPoolSummary();
+      openSettingsModal();
+    });
+    actions.appendChild(remove);
+  } else {
+    actions.appendChild(document.createElement("span"));
+  }
+
+  if (isLastGroup) {
+    const addList = document.createElement("button");
+    addList.type = "button";
+    addList.className = "secondary-button small-button";
+    addList.textContent = "Add another list";
+    addList.addEventListener("click", function () {
+      state.config.selectedTagGroups.push([]);
+      saveConfig();
+      openSettingsModal();
+    });
+    actions.appendChild(addList);
+  }
+
+  return actions;
 }
 
 function getTagToggleDelta(groupIndex, tag) {
@@ -1861,12 +1867,7 @@ function appendWordStatsSection(wrapper, wordValue) {
     title.textContent = "Common confusions";
     title.style.marginTop = "14px";
     section.appendChild(title);
-    const confusions = document.createElement("div");
-    confusions.className = "recent-list";
-    stats.commonConfusions.slice(0, 5).forEach(function (item) {
-      addPlainLine(confusions, item.label + ": " + item.count);
-    });
-    section.appendChild(confusions);
+    section.appendChild(buildCommonConfusionsTable(stats.commonConfusions.slice(0, 5)));
   }
 
   if (stats.related.length) {
@@ -1979,6 +1980,37 @@ function addStatLine(parent, label, value) {
   row.appendChild(labelNode);
   row.appendChild(valueNode);
   parent.appendChild(row);
+}
+
+function buildCommonConfusionsTable(items) {
+  const table = document.createElement("table");
+  table.className = "common-confusions-table";
+
+  const thead = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  ["Confusion", "Count"].forEach(function (label) {
+    const th = document.createElement("th");
+    th.scope = "col";
+    th.textContent = label;
+    headRow.appendChild(th);
+  });
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  items.forEach(function (item) {
+    const row = document.createElement("tr");
+    const label = document.createElement("td");
+    label.textContent = item.label;
+    const count = document.createElement("td");
+    count.textContent = item.count;
+    row.appendChild(label);
+    row.appendChild(count);
+    tbody.appendChild(row);
+  });
+  table.appendChild(tbody);
+
+  return table;
 }
 
 function addPlainLine(parent, text) {

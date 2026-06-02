@@ -669,7 +669,7 @@ The same modal-open/close logic can be reused for Info modals.
 
 This combined modal contains:
 
-spreadsheet link
+Open all words dictionary link
 statistics
 direction mode
 show answers delay
@@ -695,11 +695,21 @@ stats second
 tags third
 settings fourth
 
+The spreadsheet link is also the section header. It is a single line labeled:
+
+Open all words dictionary
+
+The modal panel itself is semi-transparent and uses a 2px backdrop blur.
+
 Font controls are shown inside the same Settings section as the other settings controls.
 
 Changing settings affects new behavior immediately where reasonable.
 
 Tag changes affect the next card/pool calculation. The current card does not need to be rebuilt immediately.
+
+Tag lists do not show per-list titles.
+
+Tag list controls are shown after the list: remove on the left, add another list on the right, using small button styling.
 
 ⸻
 
@@ -1558,6 +1568,10 @@ words with most wrong target attempts
 words most often selected as wrong answer
 common confusions
 recent attempts
+
+In the header/settings/statistics modal, statistics are shown in two columns.
+
+Common confusions are shown as a table.
 
 Correctness:
 
